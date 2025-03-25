@@ -12,7 +12,8 @@ import Line from "./scenes/line";
 import Pie from "./scenes/pie";
 import FAQ from "./scenes/faq";
 import Geography from "./scenes/geography";
-import LoginPage from "./scenes/login";
+import LoginPage from "./scenes/login/login";
+import RegisterPage from "./scenes/login/register";
 import { CssBaseline, ThemeProvider } from "@mui/material";
 import { ColorModeContext, useMode } from "./theme";
 import Calendar from "./scenes/calendar/calendar";
@@ -22,6 +23,7 @@ function App() {
   const [isSidebar, setIsSidebar] = useState(true);
   const location = useLocation();
   const isLoginPage = location.pathname === "/";
+  const isRegisterPage = location.pathname === "/register";
 
   return (
     <ColorModeContext.Provider value={colorMode}>
@@ -29,6 +31,8 @@ function App() {
         <CssBaseline />
         {isLoginPage ? (
           <LoginPage />
+        ) : isRegisterPage ? (
+          <RegisterPage email="user@example.com" type="Student" />
         ) : (
           <div className="app">
             <Sidebar isSidebar={isSidebar} />
