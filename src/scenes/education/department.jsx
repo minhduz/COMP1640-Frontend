@@ -7,6 +7,11 @@ import {
   DialogContent,
   DialogTitle,
   TextField,
+  MenuItem,
+  Select,
+  InputLabel,
+  FormControl,
+  Typography,
 } from "@mui/material";
 import { DataGrid, GridToolbar } from "@mui/x-data-grid";
 import { tokens } from "../../theme";
@@ -16,6 +21,7 @@ import {
   fetchDepartments,
   createDepartment,
   updateDepartment,
+  deleteDepartment,
 } from "../../api/education/department";
 
 const Department = () => {
@@ -26,9 +32,9 @@ const Department = () => {
   const [loading, setLoading] = useState(true);
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedDepartment, setSelectedDepartment] = useState(null);
-  const [formData, setFormData] = useState({ name: "", description: "" });
+  const [deleteDialog, setDeleteDialog] = useState(false);
+  const [formData, setFormData] = useState({ name: "", description: "", status: "Active" });
 
-  // Lấy dữ liệu từ API
   useEffect(() => {
     loadDepartments();
   }, []);
@@ -40,39 +46,51 @@ const Department = () => {
     setLoading(false);
   };
 
-  // Mở dialog (Edit hoặc Create)
   const handleOpenDialog = (dept = null) => {
     setSelectedDepartment(dept);
-    setFormData(dept ? { name: dept.name, description: dept.description } : { name: "", description: "" });
+    setFormData(
+      dept
+        ? { name: dept.name, description: dept.description, status: dept.status }
+        : { name: "", description: "", status: "Active" }
+    );
     setOpenDialog(true);
   };
 
-  // Đóng dialog
   const handleCloseDialog = () => {
     setOpenDialog(false);
     setSelectedDepartment(null);
   };
 
-  // Xử lý submit form
   const handleSubmit = async () => {
+    const payload = {
+      name: formData.name,
+      description: formData.description,
+      is_deleted: formData.status === "Inactive",
+    };
+
     if (selectedDepartment) {
-      await updateDepartment(selectedDepartment.id, formData);
+      await updateDepartment(selectedDepartment.id, payload);
     } else {
-      await createDepartment(formData);
+      await createDepartment(payload);
     }
     loadDepartments();
     handleCloseDialog();
   };
 
-  // Thay đổi trạng thái Active/Inactive
-  const handleChangeStatus = async (id, currentStatus) => {
-    await updateDepartment(id, { is_deleted: currentStatus === "Active" });
+  const handleConfirmDelete = (id) => {
+    setSelectedDepartment(id);
+    setDeleteDialog(true);
+  };
+
+  const handleDelete = async () => {
+    await deleteDepartment(selectedDepartment);
+    setDeleteDialog(false);
     loadDepartments();
   };
 
-  // Cấu hình cột DataGrid
   const columns = [
-    { field: "id", headerName: "ID", flex: 0.5 },
+    { field: "No", headerName: "No", flex: 0.3 }, // Số thứ tự
+    { field: "id", headerName: "ID", flex: 0.5 }, // ID từ database
     { field: "name", headerName: "Department Name", flex: 1 },
     { field: "description", headerName: "Description", flex: 1 },
     {
@@ -95,13 +113,13 @@ const Department = () => {
             Edit
           </Button>
           <Button
-            variant="contained"
-            color={params.row.status === "Active" ? "warning" : "success"}
+            variant="text"
+            color="error"
             size="small"
-            onClick={() => handleChangeStatus(params.row.id, params.row.status)}
+            onClick={() => handleConfirmDelete(params.row.id)}
             style={{ marginLeft: 8 }}
           >
-            {params.row.status === "Active" ? "Set Inactive" : "Set Active"}
+            Delete
           </Button>
         </Box>
       ),
@@ -112,7 +130,6 @@ const Department = () => {
     <Box m="20px">
       <Header title="Department" subtitle="List of Departments" />
 
-      {/* Button Create */}
       <Button variant="contained" color="success" onClick={() => handleOpenDialog()} style={{ marginBottom: 16 }}>
         Create New Department
       </Button>
@@ -134,11 +151,11 @@ const Department = () => {
             rows={departments}
             columns={columns}
             components={{ Toolbar: GridToolbar }}
+            getRowId={(row) => row.id || `dept_${row.No}`} // Đảm bảo mỗi hàng có ID duy nhất
           />
         )}
       </Box>
 
-      {/* Form Dialog */}
       <Dialog open={openDialog} onClose={handleCloseDialog}>
         <DialogTitle>{selectedDepartment ? "Update Department" : "Create New Department"}</DialogTitle>
         <DialogContent>
@@ -157,10 +174,32 @@ const Department = () => {
             value={formData.description}
             onChange={(e) => setFormData({ ...formData, description: e.target.value })}
           />
+          <FormControl fullWidth margin="dense">
+            <InputLabel>Status</InputLabel>
+            <Select
+              value={formData.status}
+              onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+            >
+              <MenuItem value="Active">Active</MenuItem>
+              <MenuItem value="Inactive">Inactive</MenuItem>
+            </Select>
+          </FormControl>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseDialog} color="secondary">Cancel</Button>
           <Button onClick={handleSubmit} color="primary">{selectedDepartment ? "Update" : "Create"}</Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Xác nhận xóa */}
+      <Dialog open={deleteDialog} onClose={() => setDeleteDialog(false)}>
+        <DialogTitle>Confirm Delete</DialogTitle>
+        <DialogContent>
+          <Typography>Are you sure you want to delete this department?</Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteDialog(false)} color="secondary">Cancel</Button>
+          <Button onClick={handleDelete} color="error">Delete</Button>
         </DialogActions>
       </Dialog>
     </Box>
