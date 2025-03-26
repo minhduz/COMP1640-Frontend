@@ -1,25 +1,23 @@
 import { useState, useEffect } from "react";
 import { ProSidebar, Menu, MenuItem } from "react-pro-sidebar";
-import { Box, IconButton, Typography, useTheme } from "@mui/material";
+import {
+  Box,
+  IconButton,
+  Typography,
+  useTheme,
+  useMediaQuery,
+} from "@mui/material";
 import { Link } from "react-router-dom";
 import "react-pro-sidebar/dist/css/styles.css";
 import { tokens } from "../../theme";
 import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
-import PeopleOutlinedIcon from "@mui/icons-material/PeopleOutlined";
-import ContactsOutlinedIcon from "@mui/icons-material/ContactsOutlined";
-import ReceiptOutlinedIcon from "@mui/icons-material/ReceiptOutlined";
 import PersonOutlinedIcon from "@mui/icons-material/PersonOutlined";
 import CalendarTodayOutlinedIcon from "@mui/icons-material/CalendarTodayOutlined";
-import HelpOutlineOutlinedIcon from "@mui/icons-material/HelpOutlineOutlined";
-import BarChartOutlinedIcon from "@mui/icons-material/BarChartOutlined";
-import PieChartOutlineOutlinedIcon from "@mui/icons-material/PieChartOutlineOutlined";
-import TimelineOutlinedIcon from "@mui/icons-material/TimelineOutlined";
 import MenuOutlinedIcon from "@mui/icons-material/MenuOutlined";
-import MapOutlinedIcon from "@mui/icons-material/MapOutlined";
-import ApartmentIcon from '@mui/icons-material/Apartment';
-import KeyOutlinedIcon from '@mui/icons-material/KeyOutlined';
-import ManageAccountsOutlinedIcon from '@mui/icons-material/ManageAccountsOutlined';
-import {getUserInfoApi} from "../../api/user/user";
+import ApartmentIcon from "@mui/icons-material/Apartment";
+import KeyOutlinedIcon from "@mui/icons-material/KeyOutlined";
+import ManageAccountsOutlinedIcon from "@mui/icons-material/ManageAccountsOutlined";
+import { getUserInfoApi } from "../../api/user/user";
 
 const Item = ({ title, to, icon, selected, setSelected }) => {
   const theme = useTheme();
@@ -39,16 +37,25 @@ const Item = ({ title, to, icon, selected, setSelected }) => {
   );
 };
 
-
-
 const Sidebar = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
+
+  // Detect mobile devices
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+
+  // State for collapsing the sidebar
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [selected, setSelected] = useState("Dashboard");
   const [user, setUser] = useState(null);
 
   useEffect(() => {
+    // Automatically collapse if on mobile, expand otherwise
+    setIsCollapsed(isMobile);
+  }, [isMobile]);
+
+  useEffect(() => {
+    // Fetch user data on mount
     const fetchUser = async () => {
       const userData = await getUserInfoApi();
       setUser(userData);
@@ -87,6 +94,7 @@ const Sidebar = () => {
               color: colors.grey[100],
             }}
           >
+            {/* Only show title and close icon when not collapsed */}
             {!isCollapsed && (
               <Box
                 display="flex"
@@ -95,7 +103,7 @@ const Sidebar = () => {
                 ml="15px"
               >
                 <Typography variant="h3" color={colors.grey[100]}>
-                  ADMINIS
+                  E - TUTORING
                 </Typography>
                 <IconButton onClick={() => setIsCollapsed(!isCollapsed)}>
                   <MenuOutlinedIcon />
@@ -104,6 +112,7 @@ const Sidebar = () => {
             )}
           </MenuItem>
 
+          {/* USER INFO */}
           {!isCollapsed && user && (
             <Box mb="25px">
               <Box display="flex" justifyContent="center" alignItems="center">
@@ -125,12 +134,13 @@ const Sidebar = () => {
                   {user.username}
                 </Typography>
                 <Typography variant="h5" color={colors.greenAccent[500]}>
-                  {user.first_name+" "+user.last_name}
+                  {user.first_name + " " + user.last_name}
                 </Typography>
               </Box>
             </Box>
           )}
 
+          {/* MENU ITEMS */}
           <Box paddingLeft={isCollapsed ? undefined : "10%"}>
             <Item
               title="Dashboard"
@@ -139,51 +149,52 @@ const Sidebar = () => {
               selected={selected}
               setSelected={setSelected}
             />
-            <Typography
-              variant="h6"
-              color={colors.grey[300]}
-              sx={{ m: "15px 0 5px 20px" }}
-            >
-              Permission
-            </Typography>
-            <Item
-              title="Role"
-              to="/role"
-              icon={<ManageAccountsOutlinedIcon />}
-              selected={selected}
-              setSelected={setSelected}
-            />
-            <Item
-              title="Permission"
-              to="/permission"
-              icon={<KeyOutlinedIcon />}
-              selected={selected}
-              setSelected={setSelected}
-            />
 
-            <Typography
-              variant="h6"
-              color={colors.grey[300]}
-              sx={{ m: "15px 0 5px 20px" }}
-            >
-              Data
-            </Typography>
+            {/* Show the Permission heading only if not on mobile */}
+            {user &&
+              user.permissions &&
+              (user.permissions.includes("view_roles") ||
+                user.permissions.includes("view_permissions")) &&
+              !isMobile && (
+                <Typography
+                  variant="h6"
+                  color={colors.grey[300]}
+                  sx={{ m: "15px 0 5px 20px" }}
+                >
+                  Permission
+                </Typography>
+              )}
 
-            
-            <Item
-              title="Manage Team"
-              to="/team"
-              icon={<PeopleOutlinedIcon />}
-              selected={selected}
-              setSelected={setSelected}
-            />
-            <Item
-              title="Contacts Information"
-              to="/contacts"
-              icon={<ContactsOutlinedIcon />}
-              selected={selected}
-              setSelected={setSelected}
-            />
+            {/* Conditionally render Role & Permission items */}
+            {user && user.permissions && user.permissions.includes("view_roles") && (
+              <Item
+                title="Role"
+                to="/role"
+                icon={<ManageAccountsOutlinedIcon />}
+                selected={selected}
+                setSelected={setSelected}
+              />
+            )}
+            {user && user.permissions && user.permissions.includes("view_permissions") && (
+              <Item
+                title="Permission"
+                to="/permission"
+                icon={<KeyOutlinedIcon />}
+                selected={selected}
+                setSelected={setSelected}
+              />
+            )}
+
+            {/* Show the Data heading only if not on mobile */}
+            {!isMobile && (
+              <Typography
+                variant="h6"
+                color={colors.grey[300]}
+                sx={{ m: "15px 0 5px 20px" }}
+              >
+                Data
+              </Typography>
+            )}
             <Item
               title="Department"
               to="/department"
@@ -212,14 +223,16 @@ const Sidebar = () => {
               selected={selected}
               setSelected={setSelected}
             />
-
-            <Typography
-              variant="h6"
-              color={colors.grey[300]}
-              sx={{ m: "15px 0 5px 20px" }}
-            >
-              Pages
-            </Typography>
+            {/* Show the Pages heading only if not on mobile */}
+            {!isMobile && (
+              <Typography
+                variant="h6"
+                color={colors.grey[300]}
+                sx={{ m: "15px 0 5px 20px" }}
+              >
+                Pages
+              </Typography>
+            )}
             <Item
               title="Profile Form"
               to="/form"
@@ -231,49 +244,6 @@ const Sidebar = () => {
               title="Calendar"
               to="/calendar"
               icon={<CalendarTodayOutlinedIcon />}
-              selected={selected}
-              setSelected={setSelected}
-            />
-            <Item
-              title="FAQ Page"
-              to="/faq"
-              icon={<HelpOutlineOutlinedIcon />}
-              selected={selected}
-              setSelected={setSelected}
-            />
-
-            <Typography
-              variant="h6"
-              color={colors.grey[300]}
-              sx={{ m: "15px 0 5px 20px" }}
-            >
-              Charts
-            </Typography>
-            <Item
-              title="Bar Chart"
-              to="/bar"
-              icon={<BarChartOutlinedIcon />}
-              selected={selected}
-              setSelected={setSelected}
-            />
-            <Item
-              title="Pie Chart"
-              to="/pie"
-              icon={<PieChartOutlineOutlinedIcon />}
-              selected={selected}
-              setSelected={setSelected}
-            />
-            <Item
-              title="Line Chart"
-              to="/line"
-              icon={<TimelineOutlinedIcon />}
-              selected={selected}
-              setSelected={setSelected}
-            />
-            <Item
-              title="Geography Chart"
-              to="/geography"
-              icon={<MapOutlinedIcon />}
               selected={selected}
               setSelected={setSelected}
             />
