@@ -18,6 +18,7 @@ import DarkModeOutlinedIcon from "@mui/icons-material/DarkModeOutlined";
 import FacebookIcon from "@mui/icons-material/Facebook";
 import GoogleIcon from "@mui/icons-material/Google";
 import TwitterIcon from "@mui/icons-material/Twitter";
+import {loginApi} from "../../api/user/user";  // Import the login API function
 
 const LoginSchema = Yup.object().shape({
   email: Yup.string().email("Invalid email").required("Required"),
@@ -28,7 +29,7 @@ const LoginPage = () => {
   const navigate = useNavigate();
   const theme = useTheme();
   const colorMode = useContext(ColorModeContext);
-  const isAuthenticated = localStorage.getItem("authToken");
+  const isAuthenticated = localStorage.getItem("access_token");
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -72,13 +73,20 @@ const LoginPage = () => {
             <Formik
               initialValues={{ email: "", password: "" }}
               validationSchema={LoginSchema}
-              onSubmit={(values) => {
+              onSubmit={async (values, { setSubmitting }) => {
                 console.log("Login Values", values);
-                localStorage.setItem("authToken", "dummyToken");
-                navigate("/dashboard");
+                const response = await loginApi(values.email, values.password);
+                
+                if (response) {
+                  navigate("/dashboard");  // Redirect on successful login
+                } else {
+                  alert("Login failed. Please check your credentials.");
+                }
+                
+                setSubmitting(false);
               }}
             >
-              {({ errors, touched }) => (
+              {({ errors, touched, isSubmitting }) => (
                 <Form>
                   <Box mb={2} sx={{ position: "relative" }}>
                     <Field
@@ -128,6 +136,7 @@ const LoginPage = () => {
                     variant="contained"
                     color="primary"
                     fullWidth
+                    disabled={isSubmitting}
                     sx={{
                       borderRadius: 2,
                       fontWeight: "bold",
@@ -138,7 +147,7 @@ const LoginPage = () => {
                       },
                     }}
                   >
-                    Login
+                    {isSubmitting ? "Logging in..." : "Login"}
                   </Button>
                   <Typography
                     variant="body2"
