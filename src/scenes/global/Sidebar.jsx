@@ -17,6 +17,8 @@ import TimelineOutlinedIcon from "@mui/icons-material/TimelineOutlined";
 import MenuOutlinedIcon from "@mui/icons-material/MenuOutlined";
 import MapOutlinedIcon from "@mui/icons-material/MapOutlined";
 import ApartmentIcon from '@mui/icons-material/Apartment';
+import KeyOutlinedIcon from '@mui/icons-material/KeyOutlined';
+import ManageAccountsOutlinedIcon from '@mui/icons-material/ManageAccountsOutlined';
 import {getUserInfoApi} from "../../api/user/user";
 
 const Item = ({ title, to, icon, selected, setSelected }) => {
@@ -132,8 +134,29 @@ const Sidebar = () => {
           <Box paddingLeft={isCollapsed ? undefined : "10%"}>
             <Item
               title="Dashboard"
-              to="/"
+              to="/dashboard"
               icon={<HomeOutlinedIcon />}
+              selected={selected}
+              setSelected={setSelected}
+            />
+            <Typography
+              variant="h6"
+              color={colors.grey[300]}
+              sx={{ m: "15px 0 5px 20px" }}
+            >
+              Permission
+            </Typography>
+            <Item
+              title="Role"
+              to="/role"
+              icon={<ManageAccountsOutlinedIcon />}
+              selected={selected}
+              setSelected={setSelected}
+            />
+            <Item
+              title="Permission"
+              to="/permssion"
+              icon={<KeyOutlinedIcon />}
               selected={selected}
               setSelected={setSelected}
             />
@@ -145,6 +168,8 @@ const Sidebar = () => {
             >
               Data
             </Typography>
+
+            
             <Item
               title="Manage Team"
               to="/team"
