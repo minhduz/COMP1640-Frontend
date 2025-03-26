@@ -9,6 +9,8 @@ import Contacts from "./scenes/contacts";
 
 // Education
 import Department from "./scenes/education/department";
+import CourseCategory from "./scenes/education/courseCategory";
+import Course from "./scenes/education/course";
 
 // Role
 import Role from "./scenes/role/role";
@@ -56,6 +58,8 @@ function App() {
 
                 {/* Education */}
                 <Route path="/department" element={<Department />} />
+                <Route path="/courseCategory" element={<CourseCategory />} />
+                <Route path="/course" element={<Course />} />
 
                 {/* Role */}
                 <Route path="/role" element={<Role />} />
