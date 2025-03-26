@@ -202,7 +202,27 @@ const Sidebar = () => {
               selected={selected}
               setSelected={setSelected}
             />
-
+            <Item
+              title="course Category"
+              to="/courseCategory"
+              icon={<ApartmentIcon />}
+              selected={selected}
+              setSelected={setSelected}
+            />
+            <Item
+              title="Course"
+              to="/Course"
+              icon={<ApartmentIcon />}
+              selected={selected}
+              setSelected={setSelected}
+            />
+            <Item
+              title="Invoices Balances"
+              to="/invoices"
+              icon={<ReceiptOutlinedIcon />}
+              selected={selected}
+              setSelected={setSelected}
+            />
             {/* Show the Pages heading only if not on mobile */}
             {!isMobile && (
               <Typography
