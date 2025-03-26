@@ -36,6 +36,8 @@ const Role = () => {
   const fetchRoles = async () => {
     setLoading(true);
     const data = await getAllRole();
+    console.log(data);
+    
     if (data) {
       setRoles(data.map((role, index) => ({ ...role, displayId: index + 1 })));
     }

@@ -7,16 +7,18 @@ import {
   DialogContent,
   DialogTitle,
   TextField,
-  MenuItem,
-  Select,
-  InputLabel,
-  FormControl,
+  IconButton,
   Typography,
+  CircularProgress,
+  Switch,
+  FormControlLabel,
 } from "@mui/material";
 import { DataGrid, GridToolbar } from "@mui/x-data-grid";
 import { tokens } from "../../theme";
 import Header from "../../components/Header";
 import { useTheme } from "@mui/material";
+import DeleteForeverOutlinedIcon from "@mui/icons-material/DeleteForeverOutlined";
+import EditIcon from "@mui/icons-material/Edit";
 import {
   fetchDepartments,
   createDepartment,
@@ -27,13 +29,20 @@ import {
 const Department = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
-
   const [departments, setDepartments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [openDialog, setOpenDialog] = useState(false);
+  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [selectedDepartment, setSelectedDepartment] = useState(null);
-  const [deleteDialog, setDeleteDialog] = useState(false);
-  const [formData, setFormData] = useState({ name: "", description: "", status: "Active" });
+  const [errorMessage, setErrorMessage] = useState("");
+  const [openErrorDialog, setOpenErrorDialog] = useState(false);
+  const [errorDialogMessage, setErrorDialogMessage] = useState("");
+
+  const [formData, setFormData] = useState({
+    name: "",
+    description: "",
+    is_deleted: false,
+  });
 
   useEffect(() => {
     loadDepartments();
@@ -41,8 +50,19 @@ const Department = () => {
 
   const loadDepartments = async () => {
     setLoading(true);
-    const data = await fetchDepartments();
-    setDepartments(data);
+    try {
+      const data = await fetchDepartments();
+      setDepartments(
+        data.map((dept, index) => ({
+          ...dept,
+          id: dept._id,
+          No: index + 1,
+          status: dept.is_deleted ? "Deleted" : "Active",
+        }))
+      );
+    } catch (error) {
+      console.error("Error fetching departments:", error);
+    }
     setLoading(false);
   };
 
@@ -50,47 +70,65 @@ const Department = () => {
     setSelectedDepartment(dept);
     setFormData(
       dept
-        ? { name: dept.name, description: dept.description, status: dept.status }
-        : { name: "", description: "", status: "Active" }
+        ? { name: dept.name, description: dept.description, is_deleted: dept.is_deleted }
+        : { name: "", description: "", is_deleted: false }
     );
+    setErrorMessage("");
     setOpenDialog(true);
   };
 
   const handleCloseDialog = () => {
     setOpenDialog(false);
     setSelectedDepartment(null);
+    setErrorMessage("");
   };
+
+  
 
   const handleSubmit = async () => {
-    const payload = {
-      name: formData.name,
-      description: formData.description,
-      is_deleted: formData.status === "Inactive",
-    };
-
-    if (selectedDepartment) {
-      await updateDepartment(selectedDepartment.id, payload);
-    } else {
-      await createDepartment(payload);
+    try {
+      setErrorMessage("");
+      if (selectedDepartment) {
+        await updateDepartment(selectedDepartment.id, formData);
+      } else {    
+        await createDepartment(formData);
+      }
+      loadDepartments();
+      handleCloseDialog();
+    } catch (error) {
+      console.log("in catch");
+      
+      console.error("Error submitting department:", error);
+      const errorMsg = error.response?.data?.error || "Có lỗi xảy ra, vui lòng thử lại!";
+      setErrorDialogMessage(errorMsg);
+      setOpenErrorDialog(true);
     }
-    loadDepartments();
-    handleCloseDialog();
   };
 
-  const handleConfirmDelete = (id) => {
-    setSelectedDepartment(id);
-    setDeleteDialog(true);
+  const handleOpenDeleteDialog = (dept) => {
+    setSelectedDepartment(dept);
+    setOpenDeleteDialog(true);
+  };
+
+  const handleCloseDeleteDialog = () => {
+    setOpenDeleteDialog(false);
+    setSelectedDepartment(null);
   };
 
   const handleDelete = async () => {
-    await deleteDepartment(selectedDepartment);
-    setDeleteDialog(false);
-    loadDepartments();
+    if (selectedDepartment) {
+      try {
+        await deleteDepartment(selectedDepartment.id);
+        loadDepartments();
+      } catch (error) {
+        console.error("Error deleting department:", error);
+      }
+    }
+    handleCloseDeleteDialog();
   };
 
   const columns = [
-    { field: "No", headerName: "No", flex: 0.3 }, // Số thứ tự
-    { field: "id", headerName: "ID", flex: 0.5 }, // ID từ database
+    { field: "No", headerName: "No", flex: 0.3 },
     { field: "name", headerName: "Department Name", flex: 1 },
     { field: "description", headerName: "Description", flex: 1 },
     {
@@ -104,24 +142,23 @@ const Department = () => {
       ),
     },
     {
-      field: "actions",
-      headerName: "Actions",
-      flex: 1,
+      field: "update",
+      headerName: "Update",
+      flex: 0.5,
       renderCell: (params) => (
-        <Box>
-          <Button variant="contained" color="primary" size="small" onClick={() => handleOpenDialog(params.row)}>
-            Edit
-          </Button>
-          <Button
-            variant="text"
-            color="error"
-            size="small"
-            onClick={() => handleConfirmDelete(params.row.id)}
-            style={{ marginLeft: 8 }}
-          >
-            Delete
-          </Button>
-        </Box>
+        <IconButton onClick={() => handleOpenDialog(params.row)}>
+          <EditIcon style={{ color: colors.blueAccent[400] }} />
+        </IconButton>
+      ),
+    },
+    {
+      field: "delete",
+      headerName: "Delete",
+      flex: 0.5,
+      renderCell: (params) => (
+        <IconButton onClick={() => handleOpenDeleteDialog(params.row)}>
+          <DeleteForeverOutlinedIcon style={{ color: colors.redAccent[400] }} />
+        </IconButton>
       ),
     },
   ];
@@ -130,28 +167,39 @@ const Department = () => {
     <Box m="20px">
       <Header title="Department" subtitle="List of Departments" />
 
-      <Button variant="contained" color="success" onClick={() => handleOpenDialog()} style={{ marginBottom: 16 }}>
+      <Button
+        variant="contained"
+        color="success"
+        onClick={() => handleOpenDialog()}
+        style={{ marginBottom: 16 }}
+      >
         Create New Department
       </Button>
 
       <Box
-        m="20px 0"
-        height="70vh"
+        m="40px 0 0 0"
+        height="75vh"
         sx={{
           "& .MuiDataGrid-root": { border: "none" },
           "& .MuiDataGrid-cell": { borderBottom: "none" },
-          "& .MuiDataGrid-columnHeaders": { backgroundColor: colors.blueAccent[700] },
-          "& .MuiDataGrid-footerContainer": { borderTop: "none", backgroundColor: colors.blueAccent[700] },
+          "& .MuiDataGrid-columnHeaders": {
+            backgroundColor: colors.blueAccent[700],
+            borderBottom: "none",
+          },
+          "& .MuiDataGrid-footerContainer": {
+            borderTop: "none",
+            backgroundColor: colors.blueAccent[700],
+          },
         }}
       >
         {loading ? (
-          <p>Loading...</p>
+          <CircularProgress />
         ) : (
           <DataGrid
             rows={departments}
             columns={columns}
             components={{ Toolbar: GridToolbar }}
-            getRowId={(row) => row.id || `dept_${row.No}`} // Đảm bảo mỗi hàng có ID duy nhất
+            getRowId={(row) => row.id}
           />
         )}
       </Box>
@@ -160,48 +208,63 @@ const Department = () => {
         <DialogTitle>{selectedDepartment ? "Update Department" : "Create New Department"}</DialogTitle>
         <DialogContent>
           <TextField
-            autoFocus
-            margin="dense"
             label="Department Name"
             fullWidth
+            margin="dense"
             value={formData.name}
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
           />
           <TextField
-            margin="dense"
             label="Description"
             fullWidth
+            margin="dense"
             value={formData.description}
             onChange={(e) => setFormData({ ...formData, description: e.target.value })}
           />
-          <FormControl fullWidth margin="dense">
-            <InputLabel>Status</InputLabel>
-            <Select
-              value={formData.status}
-              onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-            >
-              <MenuItem value="Active">Active</MenuItem>
-              <MenuItem value="Inactive">Inactive</MenuItem>
-            </Select>
-          </FormControl>
+          <FormControlLabel
+            control={
+              <Switch
+                checked={formData.is_deleted}
+                onChange={(e) => setFormData({ ...formData, is_deleted: e.target.checked })}
+                color="error"
+              />
+            }
+            label={formData.is_deleted ? "Deleted" : "Active"}
+          />
+
+          {errorMessage && <Typography color="error">{errorMessage}</Typography>}
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseDialog} color="secondary">Cancel</Button>
-          <Button onClick={handleSubmit} color="primary">{selectedDepartment ? "Update" : "Create"}</Button>
+          <Button onClick={handleSubmit} color="primary">
+            {selectedDepartment ? "Update" : "Create"}
+          </Button>
         </DialogActions>
       </Dialog>
 
-      {/* Xác nhận xóa */}
-      <Dialog open={deleteDialog} onClose={() => setDeleteDialog(false)}>
+      <Dialog open={openDeleteDialog} onClose={handleCloseDeleteDialog}>
         <DialogTitle>Confirm Delete</DialogTitle>
         <DialogContent>
-          <Typography>Are you sure you want to delete this department?</Typography>
+          <Typography>
+            Are you sure you want to delete the department "{selectedDepartment?.name}"?
+          </Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setDeleteDialog(false)} color="secondary">Cancel</Button>
+          <Button onClick={handleCloseDeleteDialog} color="secondary">Cancel</Button>
           <Button onClick={handleDelete} color="error">Delete</Button>
         </DialogActions>
       </Dialog>
+
+      <Dialog open={openErrorDialog} onClose={() => setOpenErrorDialog(false)}>
+        <DialogTitle>Error</DialogTitle>
+        <DialogContent>
+          <Typography color="error">{errorDialogMessage}</Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenErrorDialog(false)} color="primary">OK</Button>
+        </DialogActions>
+      </Dialog>
+                
     </Box>
   );
 };
