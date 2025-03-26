@@ -155,7 +155,7 @@ const Sidebar = () => {
             />
             <Item
               title="Permission"
-              to="/permssion"
+              to="/permission"
               icon={<KeyOutlinedIcon />}
               selected={selected}
               setSelected={setSelected}
