@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Routes, Route, useLocation } from "react-router-dom";
+import { Routes, Route, useLocation, Navigate } from "react-router-dom";
 import Topbar from "./scenes/global/Topbar";
 import Sidebar from "./scenes/global/Sidebar";
 import Dashboard from "./scenes/dashboard";
@@ -33,8 +33,18 @@ function App() {
   const [theme, colorMode] = useMode();
   const [isSidebar, setIsSidebar] = useState(true);
   const location = useLocation();
+
+  // Determine if the user is on the login or register page
   const isLoginPage = location.pathname === "/";
   const isRegisterPage = location.pathname === "/register";
+
+  // Check for access token in localStorage
+  const accessToken = localStorage.getItem("access_token");
+
+  // Redirect unauthorized users to login page
+  if (!accessToken && !isLoginPage && !isRegisterPage) {
+    return <Navigate to="/" replace />;
+  }
 
   return (
     <ColorModeContext.Provider value={colorMode}>
