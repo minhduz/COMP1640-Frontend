@@ -17,6 +17,7 @@ import MenuOutlinedIcon from "@mui/icons-material/MenuOutlined";
 import ApartmentIcon from "@mui/icons-material/Apartment";
 import KeyOutlinedIcon from "@mui/icons-material/KeyOutlined";
 import ManageAccountsOutlinedIcon from "@mui/icons-material/ManageAccountsOutlined";
+import ReceiptOutlinedIcon from "@mui/icons-material/ReceiptOutlined";
 import { getUserInfoApi } from "../../api/user/user";
 
 const Item = ({ title, to, icon, selected, setSelected }) => {
