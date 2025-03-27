@@ -25,7 +25,7 @@ export const createCourse = async (data) => {
 
 export const updateCourse = async (id, data) => {
   try {
-    const response = await axiosInstance.put(`${API_URL}/${id}`, data);
+    const response = await axiosInstance.patch(`${API_URL}/${id}`, data);
     console.log(id);
     return response.data;
   } catch (error) {
