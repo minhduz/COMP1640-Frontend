@@ -62,7 +62,7 @@ const Sidebar = () => {
     // Fetch user data on mount
     const fetchUser = async () => {
       const userData = await getUserInfoApi();
-      setUser(userData);
+      setUser(userData); 
     };
     fetchUser();
   }, []);
@@ -125,7 +125,9 @@ const Sidebar = () => {
                   alt="profile-user"
                   width="100px"
                   height="100px"
-                  src={user.avatar || "../../assets/user.png"}
+                  src={user.avatar_path 
+                    ? `${process.env.REACT_APP_API_BASE_URL}/${user.avatar_path}` 
+                    : "../../assets/user.png"} 
                   style={{ cursor: "pointer", borderRadius: "50%" }}
                 />
               </Box>

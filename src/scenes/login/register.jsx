@@ -1,4 +1,4 @@
-import React, { useState, useContext, useCallback } from "react";
+import React, { useState, useContext, useCallback, useEffect } from "react";
 import {
   TextField,
   Button,
@@ -9,8 +9,14 @@ import {
   IconButton,
   Modal,
   Slider,
-  useTheme
+  useTheme,
+  Dialog, 
+  DialogTitle, 
+  DialogContent, 
+  DialogActions,
+  InputAdornment
 } from "@mui/material";
+import { Visibility, VisibilityOff } from "@mui/icons-material";
 import { Formik, Form, Field } from "formik";
 import * as Yup from "yup";
 import { useNavigate } from "react-router-dom";
@@ -19,20 +25,19 @@ import LightModeOutlinedIcon from "@mui/icons-material/LightModeOutlined";
 import DarkModeOutlinedIcon from "@mui/icons-material/DarkModeOutlined";
 import Cropper from "react-easy-crop";
 import { getCroppedImg } from "../../utils/cropImage";
+import { emailVerificationApi } from "../../api/user/pending";
+import { registerUserApi } from "../../api/user/user";
 
 const RegisterSchema = Yup.object().shape({
-  first_name: Yup.string().required("Required"),
-  last_name: Yup.string().required("Required"),
-  phone_number: Yup.string().required("Required"),
   username: Yup.string().required("Required"),
   password: Yup.string().min(6, "Too Short!").required("Required"),
-  avatar: Yup.mixed().required("Required"),
 });
 
-const RegisterPage = ({ email, type }) => {
+const RegisterPage = ({ email, type, token }) => {
   const navigate = useNavigate();
   const theme = useTheme();
   const colorMode = useContext(ColorModeContext);
+
 
   // Image Cropping States
   const [imageSrc, setImageSrc] = useState(null);
@@ -41,6 +46,7 @@ const RegisterPage = ({ email, type }) => {
   const [zoom, setZoom] = useState(1);
   const [cropArea, setCropArea] = useState(null);
   const [openCropper, setOpenCropper] = useState(false);
+  const [userData, setUserData] = useState(null);
 
   const onCropComplete = useCallback((_, croppedAreaPixels) => {
     setCropArea(croppedAreaPixels);
@@ -67,9 +73,75 @@ const RegisterPage = ({ email, type }) => {
     }
   };
 
-  const handleSubmit = (values) => {
+  // Fetch email verification data
+  useEffect(() => {
+    const verifyEmail = async () => {
+      try {
+        const response = await emailVerificationApi(token);
+        setUserData(response); // Store user data from API response
+      } catch (error) {
+        console.error("Error verifying email:", error);
+      }
+    };
+
+    if (token) {
+      verifyEmail();
+    }
+  }, [token]);
+
+  const [open, setOpen] = useState(false);
+  const [modalMessage, setModalMessage] = useState("");
+  const [isSuccess, setIsSuccess] = useState(false)
+
+  const handleSubmit = async (values) => {
     console.log("Form Submitted Data:", values);
+  
+    const formData = new FormData();
+    formData.append("first_name", values.first_name);
+    formData.append("last_name", values.last_name);
+    formData.append("username", values.username);
+    formData.append("email", values.email);
+    formData.append("password", values.password);
+    formData.append("phone_number", values.phone_number);
+  
+    if (values.avatar) {
+      
+      formData.append("avatar", values.avatar);
+    }
+    
+    try {
+      
+      const response = await registerUserApi(formData);
+      console.log(response);
+      
+      if (response && response.status === 201) {  // Check for HTTP 201 status    
+        console.log("Registration successful!");
+
+      setModalMessage("Registration successful! Click OK to continue.");
+      setOpen(true);
+      setIsSuccess(true); // Set success flag
+      } else {
+        throw new Error(response.error || "Registration failed");
+      }
+    } catch (error) {
+      setModalMessage(error.message || "An error occurred during registration.");
+      setOpen(true);
+    }
   };
+
+  // Function to handle modal close
+const handleModalClose = () => {
+  setOpen(false);
+  if (isSuccess) {
+    navigate("/"); // Only navigate if success
+  }
+};
+
+const [showPassword, setShowPassword] = useState(false);
+
+const togglePasswordVisibility = () => {
+  setShowPassword((prev) => !prev);
+};
 
   return (
     <Box
@@ -113,11 +185,13 @@ const RegisterPage = ({ email, type }) => {
               Register
             </Typography>
             <Formik
+              enableReinitialize
               initialValues={{
-                first_name: "",
-                last_name: "",
-                username: "",
-                phone_number: "",
+                email: userData?.email || "",
+                first_name: userData?.first_name || "",
+                last_name: userData?.last_name || "",
+                username: userData?.username || "",
+                phone_number: userData?.phone_number || "",
                 password: "",
                 avatar: null,
               }}
@@ -126,48 +200,139 @@ const RegisterPage = ({ email, type }) => {
             >
               {({ errors, touched, setFieldValue }) => (
                 <Form>
+                  {/* EMail */}
                   <Box mb={2}>
-                    <TextField
-                      label="Email"
-                      value={email}
-                      name="email"
-                      fullWidth
-                      InputProps={{
+                    <Field as={TextField} label="Email" name="email" fullWidth InputProps={{
                         readOnly: true,
                         style: { color: "#fff" },
                       }}
+                      InputLabelProps={{ style: { color: "#fff" } }}
                       sx={{
-                        input: { color: "#fff" },
+                        input: {
+                          color: "#fff",
+                          backgroundColor: "transparent !important",
+                          WebkitBoxShadow: "0 0 0px 1000px #333 inset !important",
+                          WebkitTextFillColor: "#fff !important",
+                        },
                         fieldset: { borderColor: "#fff" },
                         label: { color: "#fff" },
+                      
+                      }}/>
+                  </Box>
+
+                  {/* First Name */}
+                  <Box mb={2}>
+                    <Field as={TextField} label="First Name" name="first_name" fullWidth InputProps={{
+                        readOnly: true,
+                        style: { color: "#fff" },
+                      }}
+                      InputLabelProps={{ style: { color: "#fff" } }}
+                      sx={{
+                        input: {
+                          color: "#fff",
+                          backgroundColor: "transparent !important",
+                          WebkitBoxShadow: "0 0 0px 1000px #333 inset !important",
+                          WebkitTextFillColor: "#fff !important",
+                        },
+                        fieldset: { borderColor: "#fff" },
+                        label: { color: "#fff" },
+                      }}/>
+                  </Box>
+
+                  {/* Last Name */}
+                  <Box mb={2}>
+                    <Field as={TextField} label="Last Name" name="last_name" fullWidth InputProps={{
+                        readOnly: true,
+                        style: { color: "#fff" },
+                      }}
+                      InputLabelProps={{ style: { color: "#fff" } }}
+                      sx={{
+                        input: {
+                          color: "#fff",
+                          backgroundColor: "transparent !important",
+                          WebkitBoxShadow: "0 0 0px 1000px #333 inset !important",
+                          WebkitTextFillColor: "#fff !important",
+                        },
+                        fieldset: { borderColor: "#fff" },
+                        label: { color: "#fff" },
+                      }}/>
+                  </Box>
+
+                  {/* Phone Number */}
+                  <Box mb={2}>
+                    <Field as={TextField} label="Phone Number" name="phone_number" fullWidth InputProps={{
+                        readOnly: true,
+                        style: { color: "#fff" },
+                      }}
+                      InputLabelProps={{ style: { color: "#fff" } }}
+                      sx={{
+                        input: {
+                          color: "#fff",
+                          backgroundColor: "transparent !important",
+                          WebkitBoxShadow: "0 0 0px 1000px #333 inset !important",
+                          WebkitTextFillColor: "#fff !important",
+                        },
+                        fieldset: { borderColor: "#fff" },
+                        label: { color: "#fff" },
+                      }}/>
+                  </Box>
+
+                  {/* Username */}
+                  <Box mb={2}>
+                    <Field
+                      as={TextField}
+                      label="Username"
+                      name="username"
+                      fullWidth
+                      InputLabelProps={{ style: { color: "#fff" } }}
+                      sx={{
+                        input: {
+                          color: "#fff",
+                          backgroundColor: "transparent !important",
+                          WebkitBoxShadow: "0 0 0px 1000px #333 inset !important",
+                          WebkitTextFillColor: "#fff !important",
+                        },
+                        fieldset: { borderColor: "#fff" },
+                        label: { color: "#fff" },
+                      }}
+                      error={errors.username && touched.username}
+                      helperText={errors.username && touched.username ? errors.username : ""}
+                    />
+                  </Box>
+                    
+                  {/* Password */}
+                  <Box mb={2}>
+                    <Field
+                      as={TextField}
+                      label="Password"
+                      name="password"
+                      type={showPassword ? "text" : "password"}
+                      fullWidth
+                      InputLabelProps={{ style: { color: "#fff" } }}
+                      sx={{
+                        input: {
+                          color: "#fff",
+                          backgroundColor: "transparent !important",
+                          WebkitBoxShadow: "0 0 0px 1000px #333 inset !important",
+                          WebkitTextFillColor: "#fff !important",
+                        },
+                        fieldset: { borderColor: "#fff" },
+                        label: { color: "#fff" },
+                      }}
+                      error={errors.password && touched.password}
+                      helperText={errors.password && touched.password ? errors.password : ""}
+                      InputProps={{
+                        endAdornment: (
+                          <InputAdornment position="end">
+                            <IconButton onClick={togglePasswordVisibility} edge="end">
+                              {showPassword ? <VisibilityOff sx={{ color: "#fff" }} /> : <Visibility sx={{ color: "#fff" }} />}
+                            </IconButton>
+                          </InputAdornment>
+                        ),
                       }}
                     />
                   </Box>
 
-                  {["first_name", "last_name", "phone_number", "username", "password"].map((field) => (
-                    <Box key={field} mb={2}>
-                      <Field
-                        as={TextField}
-                        label={field.replace("_", " ").toUpperCase()}
-                        name={field}
-                        fullWidth
-                        type={field === "password" ? "password" : "text"}
-                        autoComplete="off"
-                        error={errors[field] && touched[field]}
-                        helperText={errors[field] && touched[field] ? errors[field] : ""}
-                        sx={{
-                          input: {
-                            color: "#fff",
-                            backgroundColor: "transparent !important",
-                            WebkitBoxShadow: "0 0 0px 1000px #333 inset !important",
-                            WebkitTextFillColor: "#fff !important",
-                          },
-                          fieldset: { borderColor: "#fff" },
-                          label: { color: "#fff" },
-                        }}
-                      />
-                    </Box>
-                  ))}
 
                   {/* Avatar Upload Section */}
                   <Box
@@ -218,6 +383,16 @@ const RegisterPage = ({ email, type }) => {
           </Paper>
         </Box>
       </Container>
+      {/* Modal Dialog */}
+      <Dialog open={open} onClose={() => setOpen(false)}>
+        <DialogTitle>{modalMessage.includes("successful") ? "Success" : "Error"}</DialogTitle>
+        <DialogContent>
+          <Typography>{modalMessage}</Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleModalClose} color="primary">OK</Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

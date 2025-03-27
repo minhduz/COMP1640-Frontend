@@ -36,15 +36,15 @@ function App() {
   const [theme, colorMode] = useMode();
   const [isSidebar, setIsSidebar] = useState(true);
   const location = useLocation();
-
-  // Determine if the user is on the login or register page
-  const isLoginPage = location.pathname === "/";
-  const isRegisterPage = location.pathname === "/register";
-
-  // Check for access token in localStorage
   const accessToken = localStorage.getItem("access_token");
 
-  // Redirect unauthorized users to login page
+  // Check if user is on public routes
+  const isLoginPage = location.pathname === "/";
+  const searchParams = new URLSearchParams(location.search);
+  const registerToken = searchParams.get("token");
+  const isRegisterPage = location.pathname === "/register" && registerToken;
+
+  // Redirect users without access
   if (!accessToken && !isLoginPage && !isRegisterPage) {
     return <Navigate to="/" replace />;
   }
@@ -56,7 +56,11 @@ function App() {
         {isLoginPage ? (
           <LoginPage />
         ) : isRegisterPage ? (
-          <RegisterPage email="user@example.com" type="Student" />
+          <RegisterPage
+            email="user@example.com"
+            type="Student"
+            token={registerToken}
+          />
         ) : (
           <div className="app">
             <Sidebar isSidebar={isSidebar} />
@@ -77,7 +81,6 @@ function App() {
                 <Route path="/role" element={<Role />} />
                 <Route path="/permission" element={<Permission />} />
 
-                <Route path="/contacts" element={<Contacts />} />
                 <Route path="/invoices" element={<Invoices />} />
                 <Route path="/form" element={<Form />} />
                 <Route path="/bar" element={<Bar />} />

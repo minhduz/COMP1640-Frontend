@@ -27,14 +27,17 @@ export const getCroppedImg = async (imageSrc, croppedAreaPixels) => {
       cropHeight // Destination height
     );
 
-    // Convert the canvas content to a Blob
+    // Convert the canvas content to a Blob and then to a File
     return new Promise((resolve, reject) => {
       canvas.toBlob((blob) => {
         if (!blob) {
           reject(new Error("Canvas is empty"));
           return;
         }
-        resolve(blob);
+
+        // Convert blob to File
+        const file = new File([blob], "avatar.jpg", { type: "image/jpeg" });
+        resolve(file);
       }, "image/jpeg");
     });
   } catch (error) {
