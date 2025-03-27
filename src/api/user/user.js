@@ -21,6 +21,22 @@ const loginApi = async (email, password) => {
   }
 };
 
+const registerUserApi = async (formData) => {
+  try {
+    console.log(formData);
+    const response = await axiosInstance.post("/api/user", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+
+    console.log("User registration successful!", response.data);
+    return response;
+  } catch (error) {
+    return error.response?.data || { error: "Registration failed" };
+  }
+};
+
 const getUserInfoApi = async () => {
   try {
     const access_token = localStorage.getItem("access_token");
@@ -42,4 +58,4 @@ const getUserInfoApi = async () => {
   }
 };
 
-export { loginApi, getUserInfoApi };
+export { loginApi, getUserInfoApi, registerUserApi };
