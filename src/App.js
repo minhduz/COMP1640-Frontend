@@ -11,6 +11,7 @@ import Contacts from "./scenes/contacts";
 import Department from "./scenes/education/department";
 import CourseCategory from "./scenes/education/courseCategory";
 import Course from "./scenes/education/course";
+import Classroom from "./scenes/education/classroom.jsx";
 
 // Role
 import Role from "./scenes/role/role";
@@ -70,6 +71,7 @@ function App() {
                 <Route path="/department" element={<Department />} />
                 <Route path="/courseCategory" element={<CourseCategory />} />
                 <Route path="/course" element={<Course />} />
+                <Route path="/classroom" element={<Classroom />} />
 
                 {/* Role */}
                 <Route path="/role" element={<Role />} />

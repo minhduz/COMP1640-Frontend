@@ -15,6 +15,9 @@ import PersonOutlinedIcon from "@mui/icons-material/PersonOutlined";
 import CalendarTodayOutlinedIcon from "@mui/icons-material/CalendarTodayOutlined";
 import MenuOutlinedIcon from "@mui/icons-material/MenuOutlined";
 import ApartmentIcon from "@mui/icons-material/Apartment";
+import SchoolIcon from '@mui/icons-material/School';
+import LibraryBooksIcon from '@mui/icons-material/LibraryBooks';
+import MenuBookIcon from '@mui/icons-material/MenuBook';
 import KeyOutlinedIcon from "@mui/icons-material/KeyOutlined";
 import ManageAccountsOutlinedIcon from "@mui/icons-material/ManageAccountsOutlined";
 import ReceiptOutlinedIcon from "@mui/icons-material/ReceiptOutlined";
@@ -82,6 +85,7 @@ const Sidebar = () => {
         "& .pro-menu-item.active": {
           color: "#6870fa !important",
         },
+
       }}
     >
       <ProSidebar collapsed={isCollapsed}>
@@ -193,7 +197,7 @@ const Sidebar = () => {
                 color={colors.grey[300]}
                 sx={{ m: "15px 0 5px 20px" }}
               >
-                Data
+                Education
               </Typography>
             )}
             <Item
@@ -206,14 +210,28 @@ const Sidebar = () => {
             <Item
               title="course Category"
               to="/courseCategory"
-              icon={<ApartmentIcon />}
+              icon={<LibraryBooksIcon />}
               selected={selected}
               setSelected={setSelected}
             />
             <Item
               title="Course"
               to="/Course"
-              icon={<ApartmentIcon />}
+              icon={<MenuBookIcon />}
+              selected={selected}
+              setSelected={setSelected}
+            />
+            <Item
+              title="Classroom"
+              to="/Classroom"
+              icon={<SchoolIcon />}
+              selected={selected}
+              setSelected={setSelected}
+            />
+            <Item
+              title="Calendar"
+              to="/calendar"
+              icon={<CalendarTodayOutlinedIcon />}
               selected={selected}
               setSelected={setSelected}
             />
@@ -238,13 +256,6 @@ const Sidebar = () => {
               title="Profile Form"
               to="/form"
               icon={<PersonOutlinedIcon />}
-              selected={selected}
-              setSelected={setSelected}
-            />
-            <Item
-              title="Calendar"
-              to="/calendar"
-              icon={<CalendarTodayOutlinedIcon />}
               selected={selected}
               setSelected={setSelected}
             />
