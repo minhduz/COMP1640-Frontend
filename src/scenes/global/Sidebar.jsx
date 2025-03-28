@@ -70,8 +70,12 @@ const Sidebar = () => {
   return (
     <Box
       sx={{
+        height: "1200px", // Full height of the viewport
+        display: "flex",
+        flexDirection: "column",
         "& .pro-sidebar-inner": {
           background: `${colors.primary[400]} !important`,
+          height: "100%", // Ensure the sidebar fills its container
         },
         "& .pro-icon-wrapper": {
           backgroundColor: "transparent !important",
@@ -85,7 +89,6 @@ const Sidebar = () => {
         "& .pro-menu-item.active": {
           color: "#6870fa !important",
         },
-
       }}
     >
       <ProSidebar collapsed={isCollapsed}>
@@ -251,12 +254,12 @@ const Sidebar = () => {
                 color={colors.grey[300]}
                 sx={{ m: "15px 0 5px 20px" }}
               >
-                Pages
+                User
               </Typography>
             )}
             <Item
-              title="Profile Form"
-              to="/form"
+              title="Pending User"
+              to="/pending"
               icon={<PersonOutlinedIcon />}
               selected={selected}
               setSelected={setSelected}
