@@ -25,6 +25,7 @@ import FAQ from "./scenes/faq";
 import Geography from "./scenes/geography";
 
 // User
+import PendingUser from "./scenes/user/pending.jsx";
 import LoginPage from "./scenes/login/login";
 import RegisterPage from "./scenes/login/register";
 
@@ -76,6 +77,9 @@ function App() {
                 <Route path="/courseCategory" element={<CourseCategory />} />
                 <Route path="/course" element={<Course />} />
                 <Route path="/classroom" element={<Classroom />} />
+
+                {/* User */}
+                <Route path="/pending" element={<PendingUser />} />
 
                 {/* Role */}
                 <Route path="/role" element={<Role />} />
